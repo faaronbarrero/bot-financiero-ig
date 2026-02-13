@@ -1,43 +1,37 @@
-import time
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
+import requests
 
-def extraer_datos_dolarito():
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    # Este es el truco: le decimos que somos un Chrome normal de Windows
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+def extraer_datos_directos():
+    # Esta es la URL de la API interna de Dolarito que tiene los bancos
+    url = "https://api.dolarito.ar/api/v1/quotations/banks"
     
-    driver = webdriver.Chrome(options=chrome_options)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+        'Referer': 'https://www.dolarito.ar/'
+    }
     
     try:
-        print("Entrando a Dolarito...")
-        driver.get("https://www.dolarito.ar/cotizacion/bancos")
+        print("Consultando base de datos de Dolarito...")
+        response = requests.get(url, headers=headers)
         
-        # Esperamos 10 segundos fijos para que cargue todo
-        print("Esperando que carguen los precios...")
-        time.sleep(10)
-        
-        # En lugar de buscar tablas complejas, buscamos todos los textos
-        # Esto nos ayudará a ver qué está leyendo el robot realmente
-        elementos = driver.find_elements(By.XPATH, "//div[contains(@class, 'css-')]")
-        
-        print(f"--- DATOS CAPTURADOS ---")
-        for el in elementos[:20]: # Imprimimos los primeros 20 resultados para probar
-            texto = el.text.strip()
-            if texto:
-                print(f"Dato: {texto}")
+        # Si la respuesta es 200, es que entramos con éxito
+        if response.status_code == 200:
+            datos = response.json()
+            
+            print(f"{'BANCO':<25} | {'COMPRA':<10} | {'VENTA':<10}")
+            print("-" * 50)
+            
+            for entidad in datos:
+                nombre = entidad.get('name', 'N/A')
+                # Buscamos los valores de compra y venta dentro del JSON
+                compra = entidad.get('buy', 0)
+                venta = entidad.get('sell', 0)
                 
-        if not elementos:
-            print("No se encontró nada. El sitio podría estar bloqueando el acceso.")
+                print(f"{nombre:<25} | ${compra:<10} | ${venta:<10}")
+        else:
+            print(f"Error: No se pudo acceder (Código {response.status_code})")
 
     except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        driver.quit()
+        print(f"Error inesperado: {e}")
 
 if __name__ == "__main__":
-    extraer_datos_dolarito()
+    extraer_datos_directos()
