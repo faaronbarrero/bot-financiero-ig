@@ -1,6 +1,6 @@
-name: Ejecutar Bot Dolarito
+name: Ejecutar Bot Dolarito Directo
 on:
-  workflow_dispatch: # Para que puedas darle al botón "Play" manualmente
+  workflow_dispatch:
 
 jobs:
   build:
@@ -8,15 +8,11 @@ jobs:
     steps:
       - name: Descargar codigo
         uses: actions/checkout@v3
-        
       - name: Configurar Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          
-      - name: Instalar Dependencias
-        run: |
-          pip install selenium webdriver-manager
-          
-      - name: Ejecutar Script
+      - name: Instalar requests
+        run: pip install requests
+      - name: Ejecutar script
         run: python bot_dolar.py
