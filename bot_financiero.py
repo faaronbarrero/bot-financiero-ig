@@ -1,34 +1,32 @@
 import requests
 from datetime import datetime
 
-def obtener_datos():
-    print(f"Ejecución iniciada: {datetime.now()}")
-    
-    # 1. Obtener Dólares (DolarApi - Ámbito)
-    try:
-        url_dolar = "https://dolarapi.com/v1/cotizaciones"
-        res_dolar = requests.get(url_dolar)
-        if res_dolar.status_code == 200:
-            dolares = res_dolar.json()
-            print("--- COTIZACIONES DÓLAR ---")
-            for d in dolares:
-                # Filtramos los que más te interesan para Instagram
-                if d['casa'] in ['oficial', 'blue', 'mep', 'cripto']:
-                    print(f"{d['nombre']}: Compra ${d['compra']} | Venta ${d['venta']}")
-    except Exception as e:
-        print(f"Error Dólar: {e}")
+# URL que te va a dar Make.com más adelante
+MAKE_WEBHOOK_URL = "TU_URL_DE_MAKE_AQUI"
 
-    # 2. Obtener Riesgo País (Argentina Datos)
-    try:
-        url_riesgo = "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo"
-        res_riesgo = requests.get(url_riesgo)
-        if res_riesgo.status_code == 200:
-            riesgo = res_riesgo.json()
-            print("\n--- RIESGO PAÍS ---")
-            print(f"Valor: {riesgo['valor']} puntos")
-            print(f"Fecha: {riesgo['fecha']}")
-    except Exception as e:
-        print(f"Error Riesgo País: {e}")
+def obtener_y_enviar():
+    datos = {
+        "fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "blue": 0,
+        "mep": 0,
+        "oficial": 0,
+        "riesgo": 0
+    }
+    
+    # Obtener Dólares
+    res_dolar = requests.get("https://dolarapi.com/v1/cotizaciones").json()
+    for d in res_dolar:
+        if d['casa'] == 'blue': datos['blue'] = d['venta']
+        if d['casa'] == 'mep': datos['mep'] = d['venta']
+        if d['casa'] == 'oficial': datos['oficial'] = d['venta']
+
+    # Obtener Riesgo País
+    res_riesgo = requests.get("https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo").json()
+    datos['riesgo'] = res_riesgo['valor']
+
+    # ENVIAR A MAKE
+    requests.post(MAKE_WEBHOOK_URL, json=datos)
+    print("Datos enviados a Make con éxito")
 
 if __name__ == "__main__":
-    obtener_datos()
+    obtener_y_enviar()
