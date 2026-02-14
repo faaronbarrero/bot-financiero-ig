@@ -2,7 +2,7 @@ import requests
 from datetime import datetime
 
 # URL que te va a dar Make.com más adelante
-MAKE_WEBHOOK_URL = "TU_URL_DE_MAKE_AQUI"
+MAKE_WEBHOOK_URL = "https://hook.us2.make.com/qiakyqeywftpt2js4lxwdkqf7i2ihiug"
 
 def obtener_y_enviar():
     datos = {
